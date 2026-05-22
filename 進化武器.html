@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MHF 進化武器 撃数シミュレーター</title>
+    <style>
+        :root {
+            --bg-color: #111827;
+            --card-bg: #1f2937;
+            --primary: #fbbf24;
+            --primary-hover: #f59e0b;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --border: #374151;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 540px;
+        }
+
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+        }
+
+        .section-header {
+            font-size: 16px;
+            color: var(--primary);
+            margin-bottom: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: bold;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        select {
+            cursor: pointer;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239ca3af%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px top 50%;
+            background-size: 12px auto;
+        }
+
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
+        }
+
+        /* 数値入力の矢印を少し見やすく */
+        input[type="number"]::-webkit-inner-spin-button {
+            opacity: 1;
+        }
+
+        .result-card {
+            background: linear-gradient(145deg, #2a364a, #1f2937);
+            text-align: center;
+            border-top: 4px solid var(--primary);
+        }
+
+        .result-title {
+            font-size: 15px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .result-val {
+            font-size: 36px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(251, 191, 36, 0.3);
+            word-break: break-all;
+        }
+
+        .achieved {
+            color: var(--success);
+            text-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .error {
+            color: var(--error);
+            font-size: 18px;
+        }
+
+        .info-note {
+            margin-top: 20px;
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            text-align: center;
+            background-color: rgba(255,255,255,0.05);
+            padding: 12px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>✦ 進化武器 撃数シミュレーター ✦</h1>
+    
+    <div class="card">
+        <div class="section-header">📍 現在の武器</div>
+        <div class="row">
+            <div class="col" style="flex: 1.5;">
+                <label>進化段階</label>
+                <select id="currentType">
+                    <option value="0">未派生 (通常進化)</option>
+                    <option value="1">派生後 (燦然/絢爛/煌然)</option>
+                    <option value="2">G級進化 (真)</option>
+                    <option value="3">辿異進化 (極)</option>
+                </select>
+            </div>
+            <div class="col" style="flex: 1;">
+                <label>レベル</label>
+                <input type="number" id="currentLv" min="1" max="100" value="1">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-header">🎯 目標の武器</div>
+        <div class="row">
+            <div class="col" style="flex: 1.5;">
+                <label>進化段階</label>
+                <select id="targetType">
+                    <option value="0">未派生 (通常進化)</option>
+                    <option value="1">派生後 (燦然/絢爛/煌然)</option>
+                    <option value="2">G級進化 (真)</option>
+                    <option value="3" selected>辿異進化 (極)</option>
+                </select>
+            </div>
+            <div class="col" style="flex: 1;">
+                <label>レベル</label>
+                <input type="number" id="targetLv" min="1" max="100" value="100">
+            </div>
+        </div>
+    </div>
+
+    <div class="card result-card">
+        <div class="result-title">目標達成までに必要な総撃数</div>
+        <div id="resultDisplay" class="result-val">-</div>
+    </div>
+
+    <div class="info-note">
+    </div>
+</div>
+
+<script>
+    const normalCosts = [
+        70, 80, 90, 100, 120, 140, 160, 180, 200, 220,
+        240, 260, 280, 300, 320, 340, 360, 380, 400, 420,
+        440, 440, 460, 480, 500, 520, 540, 560, 580, 600,
+        620, 640, 660, 680, 700, 720, 740, 760, 780, 800,
+        820, 840, 860, 880, 900, 920, 940, 960, 980, 1000,
+        1050, 1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450, 1500,
+        1550, 1600, 1650, 1700, 1750, 1800, 1850, 1900, 1950, 2000,
+        2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900, 3000,
+        3200, 3400, 3600, 3800, 4000, 4500, 5000, 5500, 6000, 7000,
+        8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000, 17000, 20000
+    ];
+
+    const branchedCosts = [
+        1000, 1050, 1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450,
+        1500, 1550, 1600, 1650, 1700, 1750, 1800, 1850, 2000, 2100,
+        2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900, 3000, 3100,
+        3200, 3300, 3400, 3500, 3600, 3700, 3800, 3900, 4000, 4200,
+        4400, 4600, 4800, 5000, 5200, 5400, 5600, 5800, 6000, 6500,
+        7000, 7500, 8000, 8500, 9000, 9500, 10000, 10500, 11000, 12000,
+        13000, 14000, 15000, 16000, 17000, 18000, 19000, 20000, 21000, 22000,
+        23000, 24000, 25000, 26000, 27000, 28000, 29000, 30000, 31000, 32000,
+        33000, 34000, 35000, 36000, 37000, 38000, 39000, 40000, 41000, 42000,
+        43000, 44000, 45000, 46000, 47000, 48000, 49000, 50000, 60000
+    ];
+
+    const gCosts = [
+        2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500,
+        5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000,
+        10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000,
+        15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000,
+        20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000, 20000,
+        50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000,
+        100000, 100000, 100000, 100000,
+        120000, 120000, 120000,
+        150000, 150000,
+        200000
+    ];
+
+    const zenithCosts = [
+        100000, 100000, 100000,
+        125000, 125000, 125000, 125000, 125000,
+        150000, 150000, 150000, 150000, 150000,
+        175000, 175000, 175000, 175000, 175000,
+        200000, 200000, 200000, 200000, 200000,
+        225000, 225000, 225000, 225000, 225000,
+        250000, 250000, 250000, 250000, 250000,
+        275000, 275000, 275000, 275000, 275000,
+        300000, 300000, 300000, 300000, 300000,
+        325000, 325000, 325000, 325000, 325000,
+        350000, 350000, 350000, 350000, 350000,
+        400000, 400000, 400000, 400000, 400000,
+        450000, 450000, 450000, 450000, 450000,
+        500000, 500000, 500000, 500000, 500000,
+        600000, 600000, 600000, 600000, 600000,
+        700000, 700000, 700000, 700000, 700000,
+        800000, 800000, 800000, 800000, 800000,
+        900000, 900000, 900000, 900000, 900000,
+        1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000,
+        3000000
+    ];
+
+    const allEras = [normalCosts, branchedCosts, gCosts, zenithCosts];
+
+    const curTypeSel = document.getElementById('currentType');
+    const curLvInp = document.getElementById('currentLv');
+    const tarTypeSel = document.getElementById('targetType');
+    const tarLvInp = document.getElementById('targetLv');
+    const resultDisplay = document.getElementById('resultDisplay');
+
+    function updateCalculations() {
+        let curType = parseInt(curTypeSel.value);
+        let curLv = parseInt(curLvInp.value) || 1;
+        let tarType = parseInt(tarTypeSel.value);
+        let tarLv = parseInt(tarLvInp.value) || 100;
+
+        if (curLv < 1) curLv = 1; if (curLv > 100) curLv = 100;
+        if (tarLv < 1) tarLv = 1; if (tarLv > 100) tarLv = 100;
+
+        if (curType > tarType || (curType === tarType && curLv > tarLv)) {
+            resultDisplay.innerHTML = '<span class="error">逆行計算はできません</span>';
+            return;
+        }
+
+        if (curType === tarType && curLv === tarLv) {
+            resultDisplay.innerHTML = '<span class="achieved">達成済み！</span>';
+            return;
+        }
+
+        let totalGeki = 0;
+        let tempType = curType;
+        let tempLv = curLv;
+
+        while (tempType < tarType || tempLv < tarLv) {
+            if (tempType === tarType) {
+                const currentArray = allEras[tempType];
+                for (let i = tempLv - 1; i < tarLv - 1; i++) {
+                    totalGeki += currentArray[i];
+                }
+                break;
+            } else {
+                const currentArray = allEras[tempType];
+                for (let i = tempLv - 1; i < 99; i++) {
+                    totalGeki += currentArray[i];
+                }
+                tempType++;
+                tempLv = 1;
+            }
+        }
+
+        resultDisplay.innerText = totalGeki.toLocaleString() + ' g';
+    }
+
+    curTypeSel.addEventListener('change', updateCalculations);
+    curLvInp.addEventListener('input', updateCalculations);
+    tarTypeSel.addEventListener('change', updateCalculations);
+    tarLvInp.addEventListener('input', updateCalculations);
+
+    updateCalculations();
+</script>
+
+</body>
+</html>
